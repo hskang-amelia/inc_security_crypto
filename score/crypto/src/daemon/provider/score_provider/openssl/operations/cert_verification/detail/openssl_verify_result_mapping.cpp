@@ -43,6 +43,15 @@ std::optional<std::uint8_t> MapX509Error(int x509_err)
             return static_cast<uint8_t>(R::kSignatureInvalid);
         case X509_V_ERR_INVALID_PURPOSE:
             return static_cast<uint8_t>(R::kInvalidPurpose);
+        // CA and extension constraint violations. CertVerifyResult has no dedicated "constraint violated"
+        // code, so kInvalidPurpose is the closest fit: the certificate may not be used in the position it
+        // occupies on the path. A dedicated code is an open API question for upstream.
+        case X509_V_ERR_INVALID_CA:
+        case X509_V_ERR_INVALID_NON_CA:
+        case X509_V_ERR_PATH_LENGTH_EXCEEDED:
+        case X509_V_ERR_KEYUSAGE_NO_CERTSIGN:
+        case X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION:
+            return static_cast<uint8_t>(R::kInvalidPurpose);
         case X509_V_ERR_UNABLE_TO_GET_CRL:
         case X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER:
         case X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE:

@@ -46,8 +46,17 @@ TEST(OpenSslVerifyResultMappingTest, VerificationDecisionsMapToCertVerifyResult)
 TEST(OpenSslVerifyResultMappingTest, NonOutcomeErrorsHaveNoVerifyResult)
 {
     EXPECT_FALSE(MapX509Error(X509_V_ERR_OUT_OF_MEM).has_value());
-    EXPECT_FALSE(MapX509Error(X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION).has_value());
     EXPECT_FALSE(MapX509Error(X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD).has_value());
+}
+
+TEST(OpenSslVerifyResultMappingTest, ConstraintViolationsMapToInvalidPurpose)
+{
+    // CertVerifyResult has no dedicated "constraint violated" code; kInvalidPurpose is the closest.
+    EXPECT_EQ(MapX509Error(X509_V_ERR_INVALID_CA), ToCode(CertVerifyResult::kInvalidPurpose));
+    EXPECT_EQ(MapX509Error(X509_V_ERR_INVALID_NON_CA), ToCode(CertVerifyResult::kInvalidPurpose));
+    EXPECT_EQ(MapX509Error(X509_V_ERR_PATH_LENGTH_EXCEEDED), ToCode(CertVerifyResult::kInvalidPurpose));
+    EXPECT_EQ(MapX509Error(X509_V_ERR_KEYUSAGE_NO_CERTSIGN), ToCode(CertVerifyResult::kInvalidPurpose));
+    EXPECT_EQ(MapX509Error(X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION), ToCode(CertVerifyResult::kInvalidPurpose));
 }
 
 TEST(OpenSslVerifyResultMappingTest, AllocationFailureMapsToAllocationFailed)
