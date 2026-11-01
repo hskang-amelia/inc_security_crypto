@@ -40,6 +40,7 @@ namespace
 
 constexpr std::string_view LOG_PREFIX = "[OPENSSL_CERT_VERIFY] ";
 using Error = common::DaemonErrorCode;
+constexpr int kVerifyAuthLevel = 2;
 namespace openssl_detail = ::score::crypto::daemon::provider::openssl::detail;
 using openssl_detail::BuildFingerprintIndex;
 using openssl_detail::CertSptr;
@@ -224,6 +225,11 @@ Expected<OpenSslCertVerificationHandler::VerifyOutcome, common::DaemonErrorCode>
         score::mw::log::LogError() << LOG_PREFIX << "DoVerify: X509_STORE_CTX_init failed";
         return make_unexpected(Error::kInternalError);
     }
+
+    // Security level 2 (at least 112-bit security) for keys and signature digests on the path: rejects
+    // SHA-1 (and weaker) signatures and RSA/DSA/DH keys below 2048 bits. OpenSSL applies no level to
+    // X509_verify_cert() unless one is set.
+    X509_VERIFY_PARAM_set_auth_level(X509_STORE_CTX_get0_param(ctx.get()), kVerifyAuthLevel);
 
     // Verification time override — per-instance, NOT global OpenSSL state.
     // Each DoVerify() creates its own X509_STORE_CTX; parallel contexts are fully isolated.

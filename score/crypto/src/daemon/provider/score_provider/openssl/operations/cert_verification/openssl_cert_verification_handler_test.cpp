@@ -28,6 +28,7 @@
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 #include <openssl/objects.h>
+#include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
@@ -557,6 +558,29 @@ TEST_F(VerifyCertificatePathTest, Sha1SignedIntermediateIsRejected)
     const auto res = VerifyCertificatePath(BaseInput());
     EXPECT_TRUE(IsRejected(res));
     EXPECT_TRUE(res.has_value()) << "rejection reported as error 0x" << std::hex << static_cast<int>(res.error());
+}
+
+TEST_F(VerifyCertificatePathTest, Sha1SignedLeafIsRejected)
+{
+    CertSpec spec = LeafSpec();
+    spec.digest = EVP_sha1();
+    const auto res = VerifyCertificatePath(BaseInput(Issue(spec, &m_intermediate)));
+    EXPECT_TRUE(HasResult(res, R::kInvalidPurpose));
+}
+
+TEST_F(VerifyCertificatePathTest, Rsa1024LeafKeyIsRejected)
+{
+    const Key weak_key(EVP_RSA_gen(1024), PkeyDeleter{});
+    ASSERT_NE(weak_key, nullptr);
+    const auto res = VerifyCertificatePath(BaseInput(IssueWith(LeafSpec(), &m_intermediate, weak_key)));
+    EXPECT_TRUE(HasResult(res, R::kInvalidPurpose));
+}
+
+TEST_F(VerifyCertificatePathTest, Rsa2048LeafKeyIsAccepted)
+{
+    const Key key(EVP_RSA_gen(2048), PkeyDeleter{});
+    ASSERT_NE(key, nullptr);
+    EXPECT_TRUE(HasResult(VerifyCertificatePath(BaseInput(IssueWith(LeafSpec(), &m_intermediate, key))), R::kValid));
 }
 
 // ---------------------------------------------------------------------------

@@ -59,6 +59,13 @@ TEST(OpenSslVerifyResultMappingTest, ConstraintViolationsMapToInvalidPurpose)
     EXPECT_EQ(MapX509Error(X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION), ToCode(CertVerifyResult::kInvalidPurpose));
 }
 
+TEST(OpenSslVerifyResultMappingTest, SecurityLevelViolationsMapToInvalidPurpose)
+{
+    EXPECT_EQ(MapX509Error(X509_V_ERR_CA_MD_TOO_WEAK), ToCode(CertVerifyResult::kInvalidPurpose));
+    EXPECT_EQ(MapX509Error(X509_V_ERR_CA_KEY_TOO_SMALL), ToCode(CertVerifyResult::kInvalidPurpose));
+    EXPECT_EQ(MapX509Error(X509_V_ERR_EE_KEY_TOO_SMALL), ToCode(CertVerifyResult::kInvalidPurpose));
+}
+
 TEST(OpenSslVerifyResultMappingTest, AllocationFailureMapsToAllocationFailed)
 {
     EXPECT_EQ(MapX509OperationError(X509_V_ERR_OUT_OF_MEM), DaemonErrorCode::kAllocationFailed);

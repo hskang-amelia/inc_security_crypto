@@ -51,6 +51,10 @@ std::optional<std::uint8_t> MapX509Error(int x509_err)
         case X509_V_ERR_PATH_LENGTH_EXCEEDED:
         case X509_V_ERR_KEYUSAGE_NO_CERTSIGN:
         case X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION:
+        // Keys or signature digests below the configured security level (e.g. SHA-1, RSA < 2048 bits).
+        case X509_V_ERR_CA_MD_TOO_WEAK:
+        case X509_V_ERR_CA_KEY_TOO_SMALL:
+        case X509_V_ERR_EE_KEY_TOO_SMALL:
             return static_cast<uint8_t>(R::kInvalidPurpose);
         case X509_V_ERR_UNABLE_TO_GET_CRL:
         case X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER:
