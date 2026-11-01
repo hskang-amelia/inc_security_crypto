@@ -64,6 +64,27 @@ Expected<std::optional<Sha256Digest>, Error> IssuerFingerprint(const X509_CRL* c
     return std::nullopt;
 }
 
+/// Packs one entry in CrlMetadataWireLayout (fingerprints verbatim, integers little-endian).
+void EncodeCrlMetadataEntry(const score::crypto::CrlMetadata& metadata,
+                            std::array<std::uint8_t, score::crypto::CrlMetadataWireLayout::kEntrySize>& encoded) noexcept
+{
+    using Layout = score::crypto::CrlMetadataWireLayout;
+    for (std::size_t i = 0U; i < Layout::kFingerprintSize; ++i)
+    {
+        encoded[Layout::kCrlFingerprintOffset + i] = metadata.fingerprint[i];
+        encoded[Layout::kIssuerFingerprintOffset + i] = metadata.issuer_fingerprint[i];
+    }
+    const auto put_uint64 = [&encoded](std::size_t offset, std::uint64_t value) {
+        for (std::size_t i = 0U; i < sizeof(value); ++i)
+        {
+            encoded[offset + i] = static_cast<std::uint8_t>(value >> (i * 8U));
+        }
+    };
+    put_uint64(Layout::kThisUpdateOffset, static_cast<std::uint64_t>(metadata.this_update));
+    put_uint64(Layout::kNextUpdateOffset, static_cast<std::uint64_t>(metadata.next_update));
+    put_uint64(Layout::kCrlNumberOffset, metadata.crl_number);
+}
+
 }  // namespace
 
 Expected<std::vector<ParsedCrl>, common::DaemonErrorCode> SelectCrlsPerIssuer(
@@ -152,7 +173,7 @@ common::OwnedBuffer EncodeSelectedCrlMetadata(const std::vector<ParsedCrl>& sele
         if (!matches_path)
             continue;
         std::array<std::uint8_t, score::crypto::CrlMetadataWireLayout::kEntrySize> encoded{};
-        score::crypto::CrlMetadataWireLayout::Encode(candidate.metadata, encoded);
+        EncodeCrlMetadataEntry(candidate.metadata, encoded);
         encoded_metadata.insert(encoded_metadata.end(), encoded.begin(), encoded.end());
     }
     return encoded_metadata;

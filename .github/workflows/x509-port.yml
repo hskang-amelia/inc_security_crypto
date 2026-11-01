@@ -28,9 +28,9 @@ jobs:
       matrix:
         include:
           - name: default backend
-            bazel-target: "test //score/crypto/src/daemon/provider/... //score/crypto/src/daemon/cert_management/... --config=x86_64-linux"
+            bazel-target: "test //score/crypto/src/daemon/provider/... //score/crypto/src/daemon/cert_management/... --config=x86_64-linux --keep_going"
           - name: openssl provider
-            bazel-target: "test //score/crypto/src/daemon/provider/... //score/crypto/src/daemon/cert_management/... --config=x86_64-linux --//score/crypto/src/backend:score_crypto_pkcs11_backend_enabled=False"
+            bazel-target: "test //score/crypto/src/daemon/provider/... //score/crypto/src/daemon/cert_management/... --config=x86_64-linux --//score/crypto/src/backend:score_crypto_pkcs11_backend_enabled=False --keep_going"
     uses: eclipse-score/cicd-workflows/.github/workflows/tests.yml@7e8ea4c61756b931622ff979835469b93b162920
     with:
       bazel-target: ${{ matrix.bazel-target }}
