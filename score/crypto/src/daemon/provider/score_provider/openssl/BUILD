@@ -116,7 +116,10 @@ cc_library(
         "//score/crypto/src/backend:openssl_backend_active": [],
         "//conditions:default": ["@platforms//:incompatible"],
     }),
-    visibility = ["//score/crypto/src/daemon/provider:__subpackages__"],
+    visibility = [
+        "//score/crypto/src/daemon/provider:__subpackages__",
+        "//tools/coverage:__pkg__",
+    ],
     deps = [
         ":openssl_cert_utils",
         "//score/crypto/src/api/types:certificate_types",
@@ -158,7 +161,10 @@ cc_library(
         "//score/crypto/src/backend:openssl_backend_active": [],
         "//conditions:default": ["@platforms//:incompatible"],
     }),
-    visibility = ["//score/crypto/src/daemon/provider:__subpackages__"],
+    visibility = [
+        "//score/crypto/src/daemon/provider:__subpackages__",
+        "//tools/coverage:__pkg__",
+    ],
     deps = [
         "//score/crypto/src/daemon/provider/cert_management:cert_parser_headers",
         "//score/crypto/src/daemon/provider/score_provider/operations/cert_verification:score_cert_verification_handler",

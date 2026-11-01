@@ -35,6 +35,14 @@ score_coverage_scope(
         "//score/crypto/src/api/objects:cert_objects",
         "//score/crypto/src/api/future/common:future_common",
 
+        # TEMPORARY: Explicit roots for certificate path validation until its
+        # handler is registered in the provider handler factory.
+        "//score/crypto/src/daemon/provider/executors:cert_mgmt_context",
+        "//score/crypto/src/daemon/provider/handler:cert_verification_operations",
+        "//score/crypto/src/daemon/provider/score_provider/openssl:openssl_cert_verification_detail",
+        "//score/crypto/src/daemon/provider/score_provider/openssl:openssl_cert_verification_handler",
+        "//score/crypto/src/daemon/provider/score_provider/operations/cert_verification:score_cert_verification_handler",
+
         "//score/crypto/src/daemon:crypto_daemon",
         "//score/crypto/src/backend:active_pkcs11_backend",
         "//score/crypto/src/backend:pkcs11_backend_defines",
