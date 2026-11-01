@@ -689,7 +689,10 @@ TEST_F(VerifyCertificatePathTest, UnknownRevocationPolicyValueIsRejected)
 {
     Input input = BaseInput();
     input.revocation_policy = 0x7FU;
-    EXPECT_TRUE(IsRejected(VerifyCertificatePath(input)));
+    const auto res = VerifyCertificatePath(input);
+    EXPECT_TRUE(IsRejected(res));
+    ASSERT_FALSE(res.has_value());
+    EXPECT_EQ(res.error(), Error::kInvalidArgument);
 }
 
 // ---------------------------------------------------------------------------

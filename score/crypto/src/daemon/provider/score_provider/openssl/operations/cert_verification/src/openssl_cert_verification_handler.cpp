@@ -204,6 +204,11 @@ Expected<OpenSslCertVerificationHandler::VerifyOutcome, common::DaemonErrorCode>
         case RevPol::kOcspWithCrlFallback:
             // OCSP requires a separate responder URL and HTTP client — deferred.
             return make_unexpected(Error::kUnsupportedOperation);
+        default:
+            // An undefined policy value must not silently skip revocation checking.
+            score::mw::log::LogError() << LOG_PREFIX << "DoVerify: unknown revocation policy "
+                                       << static_cast<int>(input.revocation_policy);
+            return make_unexpected(Error::kInvalidArgument);
     }
 
     // --- X509_STORE_CTX ---
