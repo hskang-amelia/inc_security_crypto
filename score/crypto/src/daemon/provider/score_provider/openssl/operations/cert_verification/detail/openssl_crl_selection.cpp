@@ -15,11 +15,14 @@
 #include "score/crypto/src/api/types/certificate.hpp"
 #include "score/mw/log/logging.h"
 
+#include <openssl/err.h>
+#include <openssl/evp.h>
 #include <openssl/x509.h>
 
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -35,8 +38,10 @@ namespace
 constexpr std::string_view LOG_PREFIX = "[OPENSSL_CERT_VERIFY] ";
 using Error = common::DaemonErrorCode;
 
-Expected<std::optional<Sha256Digest>, Error> IssuerFingerprint(const X509_CRL* crl,
-                                                               const std::vector<CertSptr>& candidates)
+/// Returns the fingerprint of the candidate that issued @p crl: its subject must match the CRL issuer name
+/// and its public key must verify the CRL signature. Matching by name alone would let a CRL signed with
+/// any key stand in for the genuine issuer's CRL.
+Expected<std::optional<Sha256Digest>, Error> IssuerFingerprint(X509_CRL* crl, const std::vector<CertSptr>& candidates)
 {
     if (crl == nullptr)
         return make_unexpected(Error::kInvalidArgument);
@@ -50,16 +55,23 @@ Expected<std::optional<Sha256Digest>, Error> IssuerFingerprint(const X509_CRL* c
         if (!candidate)
             continue;
         auto x509 = CertToX509(*candidate);
-        if (x509 && X509_NAME_cmp(issuer, X509_get_subject_name(x509.get())) == 0)
-        {
-            const auto fingerprint = candidate->GetFingerprint();
-            Sha256Digest result{};
-            if (fingerprint.size() != result.size())
-                return make_unexpected(Error::kInvalidArgument);
+        if (!x509 || X509_NAME_cmp(issuer, X509_get_subject_name(x509.get())) != 0)
+            continue;
 
-            std::copy(fingerprint.begin(), fingerprint.end(), result.begin());
-            return result;
+        std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> issuer_key{X509_get_pubkey(x509.get()), &EVP_PKEY_free};
+        if (!issuer_key || X509_CRL_verify(crl, issuer_key.get()) != 1)
+        {
+            ERR_clear_error();
+            continue;
         }
+
+        const auto fingerprint = candidate->GetFingerprint();
+        Sha256Digest result{};
+        if (fingerprint.size() != result.size())
+            return make_unexpected(Error::kInvalidArgument);
+
+        std::copy(fingerprint.begin(), fingerprint.end(), result.begin());
+        return result;
     }
     return std::nullopt;
 }
@@ -110,7 +122,8 @@ Expected<std::vector<ParsedCrl>, common::DaemonErrorCode> SelectCrlsPerIssuer(
         }
         if (!issuer_fp_res.value().has_value())
         {
-            score::mw::log::LogWarn() << LOG_PREFIX << "CRL issuer not present in verification inputs";
+            score::mw::log::LogWarn() << LOG_PREFIX
+                                      << "CRL issuer not present in verification inputs or CRL signature invalid";
             continue;
         }
 

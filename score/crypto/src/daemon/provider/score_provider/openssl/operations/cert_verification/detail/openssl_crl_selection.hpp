@@ -38,9 +38,11 @@ struct ParsedCrl
 
 /// @brief Parses CRLs and keeps one per issuer.
 ///
+/// A CRL is attributed to an issuer candidate whose subject matches the CRL issuer name and whose public key
+/// verifies the CRL signature. CRLs without such a candidate are skipped before any selection, so a CRL that
+/// is not signed by the issuer cannot displace a genuine one by carrying a higher CRL number.
 /// Per issuer, the CRL with the highest CRL number wins, and a numbered CRL beats an unnumbered one; equal
-/// numbers (including both absent) fall back to the latest thisUpdate. CRLs that fail to parse, or whose
-/// issuer is not among @p issuer_candidates, are skipped.
+/// numbers (including both absent) fall back to the latest thisUpdate. CRLs that fail to parse are skipped.
 /// The order of the returned CRLs is unspecified.
 ///
 /// @param crls Raw DER or PEM CRLs to consider; null entries are skipped.
