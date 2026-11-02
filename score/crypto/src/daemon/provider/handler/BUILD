@@ -155,3 +155,11 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = ["//score/crypto/src/daemon/common"],
 )
+
+# Certificate verification handler operations header-only library
+cc_library(
+    name = "cert_verification_operations",
+    hdrs = ["operations/cert_verification_operations.hpp"],
+    visibility = ["//:__subpackages__"],
+    deps = ["//score/crypto/src/daemon/common"],
+)

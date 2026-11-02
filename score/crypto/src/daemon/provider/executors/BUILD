@@ -31,3 +31,13 @@ cc_library(
         "//score/crypto/src/daemon/provider/handler:handler_headers",
     ],
 )
+
+cc_library(
+    name = "cert_mgmt_context",
+    hdrs = ["cert_mgmt_context.hpp"],
+    visibility = [
+        "//score/crypto/src/daemon/provider:__subpackages__",
+        "//tools/coverage:__pkg__",
+    ],
+    deps = ["//score/crypto/src/daemon/common"],
+)

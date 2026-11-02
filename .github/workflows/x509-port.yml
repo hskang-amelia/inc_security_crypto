@@ -1,0 +1,37 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+# Fork-only: fast feedback for the certificate verification port (eclipse-score/inc_security_crypto#251).
+name: X.509 port (fork)
+
+on:
+  push:
+    branches:
+      - feat/x509-backend
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: Certificate targets (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: default backend
+            bazel-target: "test //score/crypto/src/daemon/provider/... //score/crypto/src/daemon/cert_management/... --config=x86_64-linux --keep_going"
+          - name: openssl provider
+            bazel-target: "test //score/crypto/src/daemon/provider/... //score/crypto/src/daemon/cert_management/... --config=x86_64-linux --//score/crypto/src/backend:score_crypto_pkcs11_backend_enabled=False --keep_going"
+    uses: eclipse-score/cicd-workflows/.github/workflows/tests.yml@7e8ea4c61756b931622ff979835469b93b162920
+    with:
+      bazel-target: ${{ matrix.bazel-target }}
+      upload-name: "NO UPLOAD OF TEST RESULTS CONFIGURED"
